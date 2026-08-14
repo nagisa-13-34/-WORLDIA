@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import{readFileSync}from'node:fs';
-import{createShopState}from'../games/shop/shop.js';
-import{ShopGame}from'../games/shop/shop.js';
+import{createShopState,chooseProduct,ShopGame}from'../games/shop/shop.js';
 import{createFestivalState,FestivalGame}from'../games/festival/festival.js';
 import{createCityState,CityGame}from'../games/city/city.js';
 import{createCountryState,CountryGame}from'../games/country/country.js';
@@ -24,8 +23,8 @@ assert.equal(createCountryState('NORMAL').industries.length,6);
 
 const originalRandom=Math.random,originalTimeout=globalThis.setTimeout;
 globalThis.setTimeout=()=>0;
-const toastLayer={append(){}};
-globalThis.document={createElement:()=>({style:{},remove(){}}),body:{append(){}},querySelector:selector=>selector==='#toast-layer'?toastLayer:null,querySelectorAll:()=>[]};
+const toastLayer={append(){}},modalLayer={hidden:true,innerHTML:'',onclick:null};
+globalThis.document={createElement:()=>({style:{},remove(){}}),body:{append(){}},querySelector:selector=>selector==='#toast-layer'?toastLayer:selector==='#modal-layer'?modalLayer:null,querySelectorAll:()=>[]};
 
 const eventState=createShopState('NORMAL');
 let randomValues=[0,.999];
@@ -47,6 +46,15 @@ shop.popularity=100;shop.quality=100;shop.economy=100;shop.capacity=100;
 const shopGame=new ShopGame(()=>{});shopGame.state=shop;shopGame.commit=()=>{};shopGame.nextDay();
 assert.equal(shop.customers,3);
 assert.equal(shop.products.reduce((total,product)=>total+product.stock,0),0);
+
+Math.random=()=>.1;
+assert.equal(chooseProduct([{id:'人気商品',cost:100,price:300,popularity:100},{id:'不人気商品',cost:100,price:300,popularity:1}]).id,'人気商品');
+const slowShop=createShopState('NORMAL'),fastShop=structuredClone(slowShop);
+for(const state of [slowShop,fastShop]){state.capacity=20;state.popularity=100;state.quality=100;state.economy=100;state.products.forEach(product=>product.stock=100)}
+slowShop.speed=0;fastShop.speed=100;
+const slowGame=new ShopGame(()=>{}),fastGame=new ShopGame(()=>{});slowGame.state=slowShop;fastGame.state=fastShop;slowGame.commit=()=>{};fastGame.commit=()=>{};
+Math.random=()=>.5;slowGame.nextDay();Math.random=()=>.5;fastGame.nextDay();
+assert.ok(fastShop.customers>slowShop.customers);
 
 Math.random=()=>.999999;
 const city=createCityState('NORMAL');
@@ -83,6 +91,9 @@ const settledCost=lockedFestival.lastResult.artistFees+lockedFestival.lastResult
 assert.equal(settledCost,paidCost);
 assert.equal(lockedFestival.lastResult.planName,paidPlan.name);
 
+const crowdAtStages=stages=>{const state=createFestivalState('NORMAL'),game=new FestivalGame(()=>{});state.live={progress:50,minute:15,attendance:250,target:250,sales:0,posts:0,satisfaction:50,crowd:0,weather:'晴れ',running:false,logs:[],cost:0,plan:{...structuredClone(state.plan),stages}};game.state=state;game.commit=()=>{};game.render=()=>{};Math.random=()=>.5;game.tickLive();return state.live.crowd};
+assert.ok(crowdAtStages(3)<crowdAtStages(1));
+
 Math.random=()=>.5;
 const longShop=createShopState('NORMAL');const longShopGame=new ShopGame(()=>{});longShopGame.state=longShop;longShopGame.commit=()=>{};longShopGame.render=()=>{};longShopGame.hire();
 for(let day=0;day<30;day++){for(const product of longShop.products)if(product.stock<8)longShopGame.stock(product.id);longShopGame.nextDay();if(longShop.pendingEvent)longShop.pendingEvent=null}
@@ -101,11 +112,29 @@ for(let month=0;month<6;month++)officeGame.nextMonth();
 assert.ok(officeCity.taxIncome<300000);
 assert.ok(officeCity.jobs>officeCity.population);
 
+const baseServices=createCityState('NORMAL'),facilityServices=structuredClone(baseServices);
+facilityServices.map[0]='school';facilityServices.map[1]='hospital';facilityServices.map[2]='police';facilityServices.map[3]='park';
+const baseServiceGame=new CityGame(()=>{}),facilityServiceGame=new CityGame(()=>{});baseServiceGame.state=baseServices;facilityServiceGame.state=facilityServices;baseServiceGame.commit=()=>{};facilityServiceGame.commit=()=>{};
+for(let month=0;month<6;month++){Math.random=()=>.999999;baseServiceGame.nextMonth();Math.random=()=>.999999;facilityServiceGame.nextMonth();baseServices.pendingEvent=null;facilityServices.pendingEvent=null}
+assert.ok(facilityServices.education>baseServices.education);
+assert.ok(facilityServices.health>baseServices.health);
+assert.ok(facilityServices.safety>baseServices.safety);
+assert.ok(facilityServices.environment>baseServices.environment);
+const demolitionCity=createCityState('NORMAL'),demolitionGame=new CityGame(()=>{}),fundsBeforeDemolition=demolitionCity.funds;
+demolitionGame.state=demolitionCity;demolitionGame.commit=()=>{};demolitionGame.demolish(18);
+assert.equal(demolitionCity.map[18],null);
+assert.ok(demolitionCity.funds>fundsBeforeDemolition);
+
 const debtCountry=createCountryState('NORMAL');const debtGame=new CountryGame(()=>{});debtGame.state=debtCountry;debtGame.commit=()=>{};debtGame.render=()=>{};
 for(let year=0;year<10;year++){debtGame.nextYear();if(debtCountry.pendingEvent)debtCountry.pendingEvent=null}
 assert.ok(debtCountry.budget>=-debtCountry.gdp*.31);
 assert.ok(debtCountry.policy.education<8);
 assert.ok(Math.abs(debtCountry.stability-(debtCountry.safety+debtCountry.credit+debtCountry.satisfaction)/3)<1e-9);
+const lowSafetyCountry=createCountryState('NORMAL'),highSafetyCountry=structuredClone(lowSafetyCountry);
+lowSafetyCountry.policy.infrastructure=1;highSafetyCountry.policy.infrastructure=16;
+const lowSafetyGame=new CountryGame(()=>{}),highSafetyGame=new CountryGame(()=>{});lowSafetyGame.state=lowSafetyCountry;highSafetyGame.state=highSafetyCountry;lowSafetyGame.commit=()=>{};highSafetyGame.commit=()=>{};
+Math.random=()=>.5;lowSafetyGame.nextYear();Math.random=()=>.5;highSafetyGame.nextYear();
+assert.ok(highSafetyCountry.safety>lowSafetyCountry.safety);
 
 const serviceWorker=readFileSync(new URL('../service-worker.js',import.meta.url),'utf8');
 assert.match(serviceWorker,/key\.startsWith\('worldia-'\)&&key!==CACHE/);
