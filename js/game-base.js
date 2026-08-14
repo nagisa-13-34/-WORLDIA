@@ -5,7 +5,7 @@ export class GameBase{
  constructor(mode,home){this.mode=mode;this.home=home;this.state=null;this.tab='overview';this.autosave=null}
  start(state){this.state=state;this.render();this.autosave=setInterval(()=>this.save(false),15000)}
  stop(){clearInterval(this.autosave)}
- save(show=true){if(Save.save(this.mode,this.state)&&show)toast('保存しました')}
+ save(show=true){const saved=Save.save(this.mode,this.state);if(show)toast(saved?'保存しました':'保存できませんでした。ブラウザの空き容量を確認してください',saved?'good':'bad');return saved}
  difficulty(){return DIFFICULTY[this.state.difficulty]}
  shell(content,tabs=''){return`${this.header()}<main class="content">${content}</main>${tabs}`}
  header(){const m=MODES[this.mode];return`<header class="topbar"><button class="icon-btn" id="back-home">←</button><div><div class="brand">${m.name}</div><div class="tiny muted">${this.state.turn}${m.unit}目・${this.state.difficulty}</div></div><div class="spacer"></div><button class="btn" id="manual-save">保存</button><button class="icon-btn" id="game-settings">⋯</button></header>`}
