@@ -1,4 +1,4 @@
-const CACHE='worldia-v1.4.0';
+const CACHE='worldia-v1.5.0';
 const ASSETS=['./','./index.html','./manifest.json','./css/style.css','./css/game.css','./assets/icons/icon.svg','./js/main.js','./js/config.js','./js/save.js','./js/ui.js','./js/events.js','./js/economy.js','./js/game-base.js','./games/shop/data.js','./games/shop/shop.js','./games/festival/data.js','./games/festival/festival.js','./games/city/data.js','./games/city/city.js','./games/country/data.js','./games/country/country.js'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('worldia-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
