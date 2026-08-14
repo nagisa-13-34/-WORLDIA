@@ -7,8 +7,8 @@ const pay=(state,key,amount)=>{if(typeof state[key]!=='number'||state[key]<amoun
 const COMMON=[
  {id:'viral',title:'SNSで話題に',text:'思いがけない投稿が広く拡散しました。',tone:'good',apply:s=>{raise(s,'reputation',6);raise(s,'popularity',7);add(s,'followers',Math.max(120,Math.round((s.followers||0)*.08)));raise(s,'companyRep',5);raise(s,'satisfaction',3);raise(s,'credit',2);raise(s,'landValue',2)}},
  {id:'economy_up',title:'景気上昇',text:'消費意欲が高まり、需要が増えています。',tone:'good',apply:s=>{raise(s,'economy',8);raise(s,'companyRep',2);raise(s,'landValue',3);raise(s,'credit',2);if(typeof s.gdp==='number')s.gdp=Math.round(s.gdp*1.012*10)/10}},
- {id:'cost_rise',title:'原材料価格の上昇',text:'仕入れや建設に一時的な負担が発生します。',tone:'bad',apply:s=>{if('costShock'in s)s.costShock=2;if('cash'in s&&'companyRep'in s)s.cash=Math.max(0,s.cash-60000);if('funds'in s)s.funds=Math.max(0,s.funds-90000);if('budget'in s)s.budget=Math.max(0,s.budget-1)}},
- {id:'heavy_rain',title:'大雨',text:'移動と屋外活動に影響が出ています。',tone:'bad',apply:s=>{if('weatherShock'in s)s.weatherShock=2;raise(s,'popularity',-2);raise(s,'companyRep',-2);raise(s,'satisfaction',-2);raise(s,'environment',-1);raise(s,'food',-2);if('funds'in s)s.funds=Math.max(0,s.funds-70000)}}
+ {id:'cost_rise',title:'原材料価格の上昇',text:'仕入れや建設に一時的な負担が発生します。',tone:'bad',apply:s=>{if('costShock'in s)s.costShock=2;if('cash'in s&&'companyRep'in s)s.cash-=60000;if('funds'in s)s.funds-=90000;if('budget'in s)s.budget-=1}},
+ {id:'heavy_rain',title:'大雨',text:'移動と屋外活動に影響が出ています。',tone:'bad',apply:s=>{if('weatherShock'in s)s.weatherShock=2;raise(s,'popularity',-2);raise(s,'companyRep',-2);raise(s,'satisfaction',-2);raise(s,'environment',-1);raise(s,'food',-2);if('funds'in s)s.funds-=70000}}
 ];
 
 const MODE={
