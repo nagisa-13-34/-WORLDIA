@@ -1,0 +1,6 @@
+const CACHE='worldia-v1.0.0';
+const ASSETS=['./','./index.html','./manifest.json','./css/style.css','./css/game.css','./assets/icons/icon.svg','./js/main.js','./js/config.js','./js/save.js','./js/ui.js','./js/events.js','./js/economy.js','./js/game-base.js','./games/shop/data.js','./games/shop/shop.js','./games/festival/data.js','./games/festival/festival.js','./games/city/data.js','./games/city/city.js','./games/country/data.js','./games/country/country.js'];
+self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(caches.match(event.request).then(cached=>cached||fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));return response}).catch(()=>caches.match('./index.html'))))});
+
