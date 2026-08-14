@@ -1,10 +1,10 @@
 import{GameBase}from'../../js/game-base.js';
 import{app,stat,meter,tabs,chart,toast,floatDelta}from'../../js/ui.js';
-import{clamp,rnd,pick,money,escapeHTML}from'../../js/config.js';
+import{clamp,rnd,pick,money,escapeHTML,DIFFICULTY}from'../../js/config.js';
 import{trend}from'../../js/economy.js';
 import{rollEvent,resolveEvent}from'../../js/events.js';
 import{VENUES,ARTISTS,WEATHER}from'./data.js';
-export function createFestivalState(difficulty){return{version:1,difficulty,turn:1,cash:Math.round(2600000*({EASY:1.35,NORMAL:1,HARD:.72}[difficulty])),companyRep:45,followers:850,eventsHeld:0,history:[0],plan:{name:'WORLDIA BEAT',venue:'club',ticket:4800,artists:['8'],stages:1,staff:25,promotion:180000,sound:50,lighting:50,security:50,food:50,goods:40,weeks:3},live:null,lastResult:null,logs:['イベント会社を設立しました。'],pendingEvent:null};}
+export function createFestivalState(difficulty){return{version:1,difficulty,turn:1,cash:Math.round(2600000*DIFFICULTY[difficulty].capital),companyRep:45,followers:850,eventsHeld:0,history:[0],plan:{name:'WORLDIA BEAT',venue:'club',ticket:4800,artists:['8'],stages:1,staff:25,promotion:180000,sound:50,lighting:50,security:50,food:50,goods:40,weeks:3},live:null,lastResult:null,logs:['イベント会社を設立しました。'],pendingEvent:null};}
 export class FestivalGame extends GameBase{
  constructor(home){super('festival',home);this.liveTimer=null}
  save(show=true){const running=this.state?.live?.running===true;if(running)this.state.live.running=false;const result=super.save(show);if(running)this.state.live.running=true;return result}
