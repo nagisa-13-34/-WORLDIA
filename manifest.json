@@ -1,0 +1,15 @@
+{
+  "name": "WORLDIA - Multi Simulation",
+  "short_name": "WORLDIA",
+  "description": "4つの世界を運営するシミュレーションゲーム",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070b16",
+  "theme_color": "#0b1020",
+  "icons": [
+    {"src":"./assets/icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
+
