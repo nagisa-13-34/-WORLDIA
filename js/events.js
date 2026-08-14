@@ -1,4 +1,4 @@
-import{pick,clamp}from'./config.js';
+import{clamp}from'./config.js';
 
 const add=(state,key,amount)=>{if(typeof state[key]==='number')state[key]+=amount};
 const raise=(state,key,amount)=>{if(typeof state[key]==='number')state[key]=clamp(state[key]+amount)};
@@ -20,12 +20,13 @@ const MODE={
 
 const definitions=mode=>[...COMMON,...(MODE[mode]||[])];
 const storedEvent=event=>({id:event.id,title:event.title,text:event.text,tone:event.tone||'warn',options:event.options?.map(({id,label})=>({id,label}))||null});
+const weightOf=(event,difficulty)=>event.tone==='bad'?difficulty.eventBad:1;
+const weightedPick=(list,difficulty)=>{const total=list.reduce((sum,event)=>sum+weightOf(event,difficulty),0);let cursor=Math.random()*total;for(const event of list){cursor-=weightOf(event,difficulty);if(cursor<0)return event}return list.at(-1)};
+export const eventBadRatio=(mode,difficulty)=>{const list=definitions(mode),bad=list.filter(event=>event.tone==='bad').reduce((sum,event)=>sum+weightOf(event,difficulty),0),total=list.reduce((sum,event)=>sum+weightOf(event,difficulty),0);return bad/total};
 
 export function rollEvent(mode,state,difficulty){
  if(state.pendingEvent||Math.random()>.15)return null;
- const list=definitions(mode),badWeight=Math.max(1,Math.round(difficulty.eventBad*2));
- const weighted=list.flatMap(event=>event.tone==='bad'?Array(badWeight).fill(event):[event]);
- const event=pick(weighted);
+ const event=weightedPick(definitions(mode),difficulty);
  if(!event.options)event.apply(state);
  state.pendingEvent=storedEvent(event);
  return state.pendingEvent;
